@@ -1,0 +1,50 @@
+# docker-compose文件版本号
+version: "3"
+
+# 配置各个容器服务
+services:
+  microService:
+    image: springboot_docker:1.0
+    container_name: book_docker  # 容器名称，如果不指定，会生成一个服务名加上前缀的容器名
+    ports:
+      - "6001:6001"
+    volumes:
+      - /usr/local/docker/springboot-project/docker-compose-springboot:/data
+    networks:
+      - my-network
+    depends_on:  # 配置该容器服务所依赖的容器服务
+      - docker_compose_redis
+      - docker_compose_mysql
+
+  docker_compose_redis:
+    image: redis:6.0.8
+    ports:
+      - "6379:6379"
+    volumes:
+      - /usr/local/docker/redis/redis.conf:/etc/redis/redis.conf
+      - /usr/local/docker/redis/data:/data
+    networks:
+      - my-network
+    command: redis-server /etc/redis/redis.conf
+
+  docker_compose_mysql:
+    image: mysql:5.7
+    environment:
+      MYSQL_ROOT_PASSWORD: '123456'
+      MYSQL_ALLOW_EMPTY_PASSWORD: 'no'
+      MYSQL_DATABASE: 'db_springboot'
+      MYSQL_USER: 'springboot'
+      MYSQL_PASSWORD: 'springboot'
+    ports:
+      - "3306:3306"
+    volumes:
+      - /usr/local/docker/mysql/log:/var/log/mysql
+      - /usr/local/docker/mysql/data:/var/lib/mysql
+      - /usr/local/docker/mysql/conf:/etc/mysql/conf.d
+    networks:
+      - my-network
+    command: --default-authentication-plugin=mysql_native_password # 解决外部无法访问
+
+networks:
+  # 创建 springboot_network 网桥网络
+  my-network:
